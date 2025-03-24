@@ -16,11 +16,13 @@ public class BoidsSimulator {
     }
 
     public void attachView(BoidsView view) {
-    	this.view = Optional.of(view);
+        this.view = Optional.of(view);
     }
       
     public void runSimulation() {
     	while (true) {
+            if (!model.getSimulationGoing())
+                continue;
             var t0 = System.currentTimeMillis();
     		var boids = model.getBoids();
     		/*

@@ -2,11 +2,10 @@ package pcd.ass01;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class BoidsModel {
     
-    private final List<Boid> boids;
+    private final List<Boid> boids = new ArrayList<>();
     private double separationWeight; 
     private double alignmentWeight; 
     private double cohesionWeight; 
@@ -15,9 +14,10 @@ public class BoidsModel {
     private final double maxSpeed;
     private final double perceptionRadius;
     private final double avoidRadius;
+    private boolean simulationGoing = false;
+    private int nboids = 0;
 
-    public BoidsModel(int nboids,  
-    						double initialSeparationWeight, 
+    public BoidsModel(double initialSeparationWeight,
     						double initialAlignmentWeight, 
     						double initialCohesionWeight,
     						double width, 
@@ -33,14 +33,15 @@ public class BoidsModel {
         this.maxSpeed = maxSpeed;
         this.perceptionRadius = perceptionRadius;
         this.avoidRadius = avoidRadius;
-        
-    	boids = new ArrayList<>();
-        for (int i = 0; i < nboids; i++) {
-        	P2d pos = new P2d(-width/2 + Math.random() * width, -height/2 + Math.random() * height);
-        	V2d vel = new V2d(Math.random() * maxSpeed/2 - maxSpeed/4, Math.random() * maxSpeed/2 - maxSpeed/4);
-        	boids.add(new Boid(pos, vel));
-        }
+    }
 
+    private void setBoids() {
+        boids.clear();
+        for (int i = 0; i < nboids; i++) {
+            P2d pos = new P2d(-width/2 + Math.random() * width, -height/2 + Math.random() * height);
+            V2d vel = new V2d(Math.random() * maxSpeed/2 - maxSpeed/4, Math.random() * maxSpeed/2 - maxSpeed/4);
+            boids.add(new Boid(pos, vel));
+        }
     }
     
     public synchronized List<Boid> getBoids(){
@@ -105,5 +106,22 @@ public class BoidsModel {
 
     public synchronized double getPerceptionRadius() {
     	return perceptionRadius;
+    }
+
+    public synchronized boolean getSimulationGoing() {
+        return simulationGoing;
+    }
+
+    public synchronized void startSimulation() {
+        simulationGoing = true;
+    }
+
+    public synchronized void stopSimulation() {
+        simulationGoing = false;
+    }
+
+    public synchronized void setBoidCount(int nboids){
+        this.nboids = nboids;
+        setBoids();
     }
 }
