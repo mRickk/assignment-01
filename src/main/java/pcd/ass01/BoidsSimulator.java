@@ -36,7 +36,7 @@ public class BoidsSimulator {
             var t0 = System.currentTimeMillis();
     		var boids = model.getBoids();
             for (int i = 0; i < nthread; i++) {
-                //var ub = new UpdateBoids(boids[i*DIV_FACTOR(i+1)*DIV_FACTOR-1])
+                var ub = new UpdateBoids(boids.subList(i * DIV_FACTOR, Math.min((i + 1) * DIV_FACTOR, boids.size())), model, barrier);
             }
 
 
