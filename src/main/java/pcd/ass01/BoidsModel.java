@@ -15,9 +15,11 @@ public class BoidsModel {
     private final double perceptionRadius;
     private final double avoidRadius;
     private boolean simulationGoing = false;
-    private int nboids = 0;
+    private final int nBoids;
 
-    public BoidsModel(double initialSeparationWeight,
+    public BoidsModel(
+                            int nBoids,
+                            double initialSeparationWeight,
     						double initialAlignmentWeight, 
     						double initialCohesionWeight,
     						double width, 
@@ -28,22 +30,29 @@ public class BoidsModel {
         separationWeight = initialSeparationWeight;
         alignmentWeight = initialAlignmentWeight;
         cohesionWeight = initialCohesionWeight;
+        this.nBoids = nBoids;
         this.width = width;
         this.height = height;
         this.maxSpeed = maxSpeed;
         this.perceptionRadius = perceptionRadius;
         this.avoidRadius = avoidRadius;
+
+        setBoids();
     }
 
     private void setBoids() {
         boids.clear();
-        for (int i = 0; i < nboids; i++) {
+        for (int i = 0; i < nBoids; i++) {
             P2d pos = new P2d(-width/2 + Math.random() * width, -height/2 + Math.random() * height);
             V2d vel = new V2d(Math.random() * maxSpeed/2 - maxSpeed/4, Math.random() * maxSpeed/2 - maxSpeed/4);
             boids.add(new Boid(pos, vel));
         }
     }
-    
+
+    public synchronized int getNBoids() {
+        return nBoids;
+    }
+
     public synchronized List<Boid> getBoids(){
     	return boids;
     }
@@ -118,10 +127,5 @@ public class BoidsModel {
 
     public synchronized void stopSimulation() {
         simulationGoing = false;
-    }
-
-    public synchronized void setBoidCount(int nboids){
-        this.nboids = nboids;
-        setBoids();
     }
 }

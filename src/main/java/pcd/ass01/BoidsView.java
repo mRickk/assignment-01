@@ -11,8 +11,7 @@ public class BoidsView implements ChangeListener, ActionListener {
 	private final JFrame frame;
 	private final BoidsPanel boidsPanel;
 	private final JSlider cohesionSlider, separationSlider, alignmentSlider;
-	private final JButton startButton, stopButton, applyButton;
-	private final JTextField boidsCountField;
+	private final JButton startButton, stopButton;
 	private final BoidsModel model;
 	private final int width, height;
 
@@ -24,6 +23,7 @@ public class BoidsView implements ChangeListener, ActionListener {
 		frame = new JFrame("Boids Simulation");
 		frame.setSize(width, height);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLocationRelativeTo(null);
 		JPanel cp = new JPanel();
 		LayoutManager layout = new BorderLayout();
 		cp.setLayout(layout);
@@ -35,21 +35,12 @@ public class BoidsView implements ChangeListener, ActionListener {
 		JPanel buttonsPanel = new JPanel();
 		startButton = new JButton("Start");
 		stopButton = new JButton("Stop");
-		startButton.setEnabled(false);
+		startButton.setEnabled(true);
 		stopButton.setEnabled(false);
 		startButton.addActionListener(this);
 		stopButton.addActionListener(this);
 		buttonsPanel.add(startButton);
 		buttonsPanel.add(stopButton);
-
-		JPanel countPanel = new JPanel();
-		countPanel.add(new JLabel("Number of Boids:"));
-		boidsCountField = new JTextField(5);
-		boidsCountField.setText("2500"); // Default value
-		applyButton = new JButton("Apply");
-		applyButton.addActionListener(this);
-		countPanel.add(boidsCountField);
-		countPanel.add(applyButton);
 
 		JPanel slidersPanel = new JPanel();
 		slidersPanel.setLayout(new GridLayout(3, 2));
@@ -65,8 +56,6 @@ public class BoidsView implements ChangeListener, ActionListener {
 		slidersPanel.add(new JLabel("Cohesion"));
 		slidersPanel.add(cohesionSlider);
 
-		// Add all control elements to the control panel
-		controlPanel.add(BorderLayout.NORTH, countPanel);
 		controlPanel.add(BorderLayout.CENTER, slidersPanel);
 		controlPanel.add(BorderLayout.SOUTH, buttonsPanel);
 
@@ -117,28 +106,11 @@ public class BoidsView implements ChangeListener, ActionListener {
 			model.startSimulation();
 			startButton.setEnabled(false);
 			stopButton.setEnabled(true);
-		} else if (e.getSource() == stopButton) {
+		}
+		if (e.getSource() == stopButton) {
 			model.stopSimulation();
 			startButton.setEnabled(true);
 			stopButton.setEnabled(false);
-		} else {
-			applyButton.setEnabled(false);
-			startButton.setEnabled(true);
-			// Apply button for boid count
-			try {
-				int count = Integer.parseInt(boidsCountField.getText());
-				if (count > 0) {
-					model.setBoidCount(count);
-				} else {
-					JOptionPane.showMessageDialog(frame,
-							"Please enter a positive number of boids.",
-							"Invalid Input", JOptionPane.ERROR_MESSAGE);
-				}
-			} catch (NumberFormatException ex) {
-				JOptionPane.showMessageDialog(frame,
-						"Please enter a valid number.",
-						"Invalid Input", JOptionPane.ERROR_MESSAGE);
-			}
 		}
 	}
 

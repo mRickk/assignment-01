@@ -1,6 +1,7 @@
 package pcd.ass01;
 
 import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 public class UpdateBoids extends Thread {
@@ -20,8 +21,13 @@ public class UpdateBoids extends Thread {
         for (Boid boid : boids) {
             boid.updateVelocity(model);
         }
-        for (Boid boid : boids) {
-            boid.updatePos(model);
+        try {
+            barrier.await();
+            for (Boid boid : boids) {
+                boid.updatePos(model);
+            }
+        } catch (InterruptedException | BrokenBarrierException e) {
+            throw new RuntimeException(e);
         }
     }
 }
