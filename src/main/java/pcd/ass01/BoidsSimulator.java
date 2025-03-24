@@ -1,6 +1,8 @@
 package pcd.ass01;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CyclicBarrier;
 
 public class BoidsSimulator {
 
@@ -8,11 +10,19 @@ public class BoidsSimulator {
     private Optional<BoidsView> view;
     
     private static final int FRAMERATE = 25;
+    private static final int DIV_FACTOR = 100;
+    private int nthread;
     private int framerate;
+    private CyclicBarrier barrier;
+    private List<UpdateBoids> updateBoidsList;
     
     public BoidsSimulator(BoidsModel model) {
         this.model = model;
         view = Optional.empty();
+        // TODO: check se va qua
+        var nboids = model.getBoids().size();
+        nthread = nboids / DIV_FACTOR + (nboids % DIV_FACTOR == 0 ? 0 : 1);
+        this.barrier = new CyclicBarrier(nthread);
     }
 
     public void attachView(BoidsView view) {
@@ -25,25 +35,10 @@ public class BoidsSimulator {
                 continue;
             var t0 = System.currentTimeMillis();
     		var boids = model.getBoids();
-    		/*
-    		for (Boid boid : boids) {
-                boid.update(model);
-            }
-            */
-    		
-    		/* 
-    		 * Improved correctness: first update velocities...
-    		 */
-    		for (Boid boid : boids) {
-                boid.updateVelocity(model);
+            for (int i = 0; i < nthread; i++) {
+                //var ub = new UpdateBoids(boids[i*DIV_FACTOR(i+1)*DIV_FACTOR-1])
             }
 
-    		/* 
-    		 * ..then update positions
-    		 */
-    		for (Boid boid : boids) {
-                boid.updatePos(model);
-            }
 
             
     		if (view.isPresent()) {
