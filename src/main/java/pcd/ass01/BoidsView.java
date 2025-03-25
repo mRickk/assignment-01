@@ -14,11 +14,13 @@ public class BoidsView implements ChangeListener, ActionListener {
 	private final JButton startButton, stopButton;
 	private final BoidsModel model;
 	private final int width, height;
+	private final BoidsSimulator simulator;
 
-	public BoidsView(BoidsModel model, int width, int height) {
+	public BoidsView(BoidsModel model, BoidsSimulator simulator, int width, int height) {
 		this.model = model;
 		this.width = width;
 		this.height = height;
+		this.simulator = simulator;
 
 		frame = new JFrame("Boids Simulation");
 		frame.setSize(width, height);
@@ -103,12 +105,12 @@ public class BoidsView implements ChangeListener, ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == startButton) {
-			model.startSimulation();
+			simulator.startSimulator();
 			startButton.setEnabled(false);
 			stopButton.setEnabled(true);
 		}
 		if (e.getSource() == stopButton) {
-			model.stopSimulation();
+			simulator.stopSimulator();
 			startButton.setEnabled(true);
 			stopButton.setEnabled(false);
 		}

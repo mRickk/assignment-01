@@ -14,7 +14,6 @@ public class BoidsModel {
     private final double maxSpeed;
     private final double perceptionRadius;
     private final double avoidRadius;
-    private boolean simulationGoing = false;
     private final int nBoids;
 
     public BoidsModel(
@@ -111,17 +110,5 @@ public class BoidsModel {
 
     public double getPerceptionRadius() {
     	return perceptionRadius;
-    }
-
-    public boolean getSimulationGoing() {
-        return simulationGoing;
-    }
-
-    public synchronized void startSimulation() {
-        simulationGoing = true;
-    }
-
-    public synchronized void stopSimulation() {
-        simulationGoing = false;
     }
 }

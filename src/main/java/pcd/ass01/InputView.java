@@ -11,13 +11,9 @@ public class InputView implements ActionListener {
     private final JFrame frame;
     private final JButton startButton;
     private final JTextField boidsCountField;
-    private final int width, height;
     private Integer result = null;
 
     public InputView(int width, int height) {
-        this.width = width;
-        this.height = height;
-
         frame = new JFrame("Boids");
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

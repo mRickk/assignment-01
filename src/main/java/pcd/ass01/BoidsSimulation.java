@@ -16,10 +16,9 @@ public class BoidsSimulation {
 	final static int SCREEN_HEIGHT = 800;
 
 	final static int INPUT_SCREEN_WIDTH = 300;
-	final static int INPUT_SCREEN_HEIGHT = 200;
+	final static int INPUT_SCREEN_HEIGHT = 80;
 
 	public static void main(String[] args) {
-		System.out.println(Runtime.getRuntime().availableProcessors());
 		var inputView = new InputView(INPUT_SCREEN_WIDTH, INPUT_SCREEN_HEIGHT);
         try {
             var nBoids = inputView.getBoidCount();
@@ -33,7 +32,7 @@ public class BoidsSimulation {
 					AVOID_RADIUS);
 			var sim = new BoidsSimulator(model);
 
-			var view = new BoidsView(model, SCREEN_WIDTH, SCREEN_HEIGHT);
+			var view = new BoidsView(model, sim, SCREEN_WIDTH, SCREEN_HEIGHT);
 			sim.attachView(view);
 			sim.runSimulation();
 

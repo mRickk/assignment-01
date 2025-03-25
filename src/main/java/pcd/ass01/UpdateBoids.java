@@ -19,9 +19,7 @@ public class UpdateBoids extends Thread {
     public void run() {
         while (true) {
             try {
-                var t0 = System.currentTimeMillis();
                 barrierSim.await();
-                System.out.println("Thread " + Thread.currentThread().getId() + " passed barrierSIM: " + (System.currentTimeMillis() - t0));
             } catch (InterruptedException | BrokenBarrierException e) {
                 throw new RuntimeException(e);
             }
@@ -29,9 +27,7 @@ public class UpdateBoids extends Thread {
                 boid.updateVelocity(model);
             }
             try {
-                var t0 = System.currentTimeMillis();
                 barrierVel.await();
-                System.out.println("Thread " + Thread.currentThread().getId() + " passed barrierVEL: " + (System.currentTimeMillis() - t0));
             } catch (InterruptedException | BrokenBarrierException e) {
                 throw new RuntimeException(e);
             }
@@ -39,9 +35,7 @@ public class UpdateBoids extends Thread {
                 boid.updatePos(model);
             }
             try {
-                var t0 = System.currentTimeMillis();
                 barrierPos.await();
-                System.out.println("Thread " + Thread.currentThread().getId() + " passed barrierPOS: " + (System.currentTimeMillis() - t0));
             } catch (InterruptedException | BrokenBarrierException e) {
                 throw new RuntimeException(e);
             }
