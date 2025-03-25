@@ -49,10 +49,6 @@ public class BoidsModel {
         }
     }
 
-    public synchronized int getNBoids() {
-        return nBoids;
-    }
-
     public synchronized List<Boid> getBoids(){
     	return boids;
     }

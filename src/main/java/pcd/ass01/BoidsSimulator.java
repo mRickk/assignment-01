@@ -15,8 +15,9 @@ public class BoidsSimulator {
     private static final int DIV_FACTOR = 100;
     private int nthread;
     private int framerate;
-    private CyclicBarrier barrier;
+    private CyclicBarrier barrierVel, barrierPos, barrierSim;
     private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
+    private final BoidsMonitor monitor = new BoidsMonitor();
     
     public BoidsSimulator(BoidsModel model) {
         this.model = model;
@@ -26,55 +27,55 @@ public class BoidsSimulator {
     public void attachView(BoidsView view) {
         this.view = Optional.of(view);
     }
-      
+
     public void runSimulation() {
         var boids = model.getBoids();
         var nboids = boids.size();
         nthread = nboids / DIV_FACTOR + (nboids % DIV_FACTOR == 0 ? 0 : 1);
-        this.barrier = new CyclicBarrier(nthread);
+        this.barrierVel = new CyclicBarrier(nthread);
+        this.barrierPos = new CyclicBarrier(nthread + 1);
+        this.barrierSim = new CyclicBarrier(nthread + 1);
 
-    	while (true) {
-            if (!model.getSimulationGoing())
+        updateBoidsList.clear();
+        for (int i = 0; i < nthread; i++) {
+            var subList = boids.subList(i * DIV_FACTOR, Math.min((i + 1) * DIV_FACTOR, boids.size()));
+            System.out.println(i * DIV_FACTOR + " -> " + Math.min((i + 1) * DIV_FACTOR, boids.size()));
+            var ub = new UpdateBoids(subList, model, barrierVel, barrierPos, barrierSim);
+            updateBoidsList.add(ub);
+        }
+        updateBoidsList.forEach(UpdateBoids::start);
+
+        while (true) {
+            if (!model.getSimulationGoing()) //TODO: busy waiting
                 continue;
+
             var t0 = System.currentTimeMillis();
+//            updateBoidsList.forEach(UpdateBoids::notifyBoid);
+//            monitor.notifyBoids();
 
-            updateBoidsList.clear();
-            barrier.reset();
-            for (int i = 0; i < nthread; i++) {
-                var ub = new UpdateBoids(boids.subList(i * DIV_FACTOR, Math.min((i + 1) * DIV_FACTOR, boids.size())), model, barrier);
-                updateBoidsList.add(ub);
+            try {
+                barrierSim.await();
+                barrierPos.await();
+            } catch (InterruptedException | BrokenBarrierException e) {
+                throw new RuntimeException(e);
             }
-
-            updateBoidsList.forEach(UpdateBoids::start);
-            for (Thread t : updateBoidsList) {
-                try {
-                    t.join();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-//            try {
-//                barrier.await();
-//            } catch (InterruptedException | BrokenBarrierException e) {
-//                throw new RuntimeException(e);
-//            }
 
             if (view.isPresent()) {
-            	view.get().update(framerate);
-            	var t1 = System.currentTimeMillis();
+                view.get().update(framerate);
+                var t1 = System.currentTimeMillis();
                 var dtElapsed = t1 - t0;
                 var frameratePeriod = 1000/FRAMERATE;
-                
+
                 if (dtElapsed < frameratePeriod) {
-                	try {
-                		Thread.sleep(frameratePeriod - dtElapsed);
-                	} catch (Exception ex) {}
-                	framerate = FRAMERATE;
+                    try {
+                        Thread.sleep(frameratePeriod - dtElapsed);
+                    } catch (Exception ex) {}
+                    framerate = FRAMERATE;
                 } else {
-                	framerate = (int) (1000/dtElapsed);
+                    framerate = (int) (1000/dtElapsed);
                 }
-    		}
-            
-    	}
+            }
+
+        }
     }
 }

@@ -19,6 +19,7 @@ public class BoidsSimulation {
 	final static int INPUT_SCREEN_HEIGHT = 200;
 
 	public static void main(String[] args) {
+		System.out.println(Runtime.getRuntime().availableProcessors());
 		var inputView = new InputView(INPUT_SCREEN_WIDTH, INPUT_SCREEN_HEIGHT);
         try {
             var nBoids = inputView.getBoidCount();
