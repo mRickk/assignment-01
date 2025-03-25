@@ -39,7 +39,6 @@ public class BoidsSimulator {
         updateBoidsList.clear();
         for (int i = 0; i < nthread; i++) {
             var subList = boids.subList(i * DIV_FACTOR, Math.min((i + 1) * DIV_FACTOR, boids.size()));
-            System.out.println(i * DIV_FACTOR + " -> " + Math.min((i + 1) * DIV_FACTOR, boids.size()));
             var ub = new UpdateBoids(subList, model, barrierVel, barrierPos, barrierSim);
             updateBoidsList.add(ub);
         }
