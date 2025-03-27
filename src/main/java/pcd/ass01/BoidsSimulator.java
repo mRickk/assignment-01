@@ -1,10 +1,7 @@
 package pcd.ass01;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -15,14 +12,16 @@ public class BoidsSimulator {
     private Optional<BoidsView> view;
     private static final int FRAMERATE = 25;
     private static final int DIV_FACTOR = 100;
-    private int nthread;
+//    private int nthread;
     private int framerate;
-    private CyclicBarrier barrierVel, barrierPos, barrierSim;
-    private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
+//    private CyclicBarrier barrierVel, barrierPos, barrierSim;
+//    private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
 
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
     private boolean isSimulationRunning = false;
+
+    private ExecutorService exec;
     
     public BoidsSimulator(BoidsModel model) {
         this.model = model;
@@ -56,22 +55,6 @@ public class BoidsSimulator {
     }
 
     public void runSimulation() {
-        var boids = model.getBoids();
-        var nboids = boids.size();
-        nthread = nboids / DIV_FACTOR + (nboids % DIV_FACTOR == 0 ? 0 : 1);
-
-        this.barrierVel = new CyclicBarrier(nthread);
-        this.barrierPos = new CyclicBarrier(nthread + 1);
-        this.barrierSim = new CyclicBarrier(nthread + 1);
-
-        updateBoidsList.clear();
-        for (int i = 0; i < nthread; i++) {
-            var subList = boids.subList(i * DIV_FACTOR, Math.min((i + 1) * DIV_FACTOR, boids.size()));
-            var ub = new UpdateBoids(subList, model, barrierVel, barrierPos, barrierSim);
-            updateBoidsList.add(ub);
-        }
-        updateBoidsList.forEach(UpdateBoids::start);
-
         while (true) {
             try {
                 lock.lock();
@@ -89,9 +72,22 @@ public class BoidsSimulator {
             var t0 = System.currentTimeMillis();
 
             try {
-                barrierSim.await();
-                barrierPos.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
+                var boids = model.getBoids();
+                exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+                for (var boid : boids) {
+                    exec.execute(() -> boid.updateVelocity(model));
+                }
+                exec.shutdown();
+                exec.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+
+                exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+                for (var boid : boids) {
+                    exec.execute(() -> boid.updatePos(model));
+                }
+                exec.shutdown();
+                exec.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
 
