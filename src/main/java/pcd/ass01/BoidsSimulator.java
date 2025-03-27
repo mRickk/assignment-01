@@ -11,11 +11,7 @@ public class BoidsSimulator {
     private BoidsModel model;
     private Optional<BoidsView> view;
     private static final int FRAMERATE = 25;
-    private static final int DIV_FACTOR = 100;
-//    private int nthread;
     private int framerate;
-//    private CyclicBarrier barrierVel, barrierPos, barrierSim;
-//    private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
 
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
