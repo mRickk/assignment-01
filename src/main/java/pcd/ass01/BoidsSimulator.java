@@ -51,6 +51,18 @@ public class BoidsSimulator {
     }
 
     public void runSimulation() {
+        var boids = model.getBoids();
+        exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+        var taskSync = new TaskSync(boids.size());
+        var updateVelTasks = boids.stream().map(b -> (Runnable) () -> {
+            b.updateVelocity(model);
+            taskSync.complete();
+        }).toList();
+        var updatePosTasks = boids.stream().map(b -> (Runnable) () -> {
+            b.updatePos(model);
+            taskSync.complete();
+        }).toList();
+
         while (true) {
             try {
                 lock.lock();
@@ -67,22 +79,12 @@ public class BoidsSimulator {
 
             var t0 = System.currentTimeMillis();
 
+
             try {
-                var boids = model.getBoids();
-                exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
-                for (var boid : boids) {
-                    exec.execute(() -> boid.updateVelocity(model));
-                }
-                exec.shutdown();
-                exec.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
-
-                exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
-                for (var boid : boids) {
-                    exec.execute(() -> boid.updatePos(model));
-                }
-                exec.shutdown();
-                exec.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
-
+                updateVelTasks.forEach(exec::execute);
+                taskSync.waitCompleted();
+                updatePosTasks.forEach(exec::execute);
+                taskSync.waitCompleted();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
