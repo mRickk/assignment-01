@@ -1,14 +1,15 @@
 package pcd.ass01;
+import pcd.ass01.barrier.Barrier;
+
 import java.util.List;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+
 public class UpdateBoids extends Thread {
     private List<Boid> boids;
     private BoidsModel model;
-    private CyclicBarrier barrierVel;
-    private CyclicBarrier barrierPos;
-    private CyclicBarrier barrierSim;
-    public UpdateBoids(List<Boid> boids, BoidsModel model, CyclicBarrier barrierVel, CyclicBarrier barrierPos, CyclicBarrier barrierSim) {
+    private Barrier barrierVel;
+    private Barrier barrierPos;
+    private Barrier barrierSim;
+    public UpdateBoids(List<Boid> boids, BoidsModel model, Barrier barrierVel, Barrier barrierPos, Barrier barrierSim) {
         this.boids = boids;
         this.model = model;
         this.barrierVel = barrierVel;
@@ -19,24 +20,24 @@ public class UpdateBoids extends Thread {
     public void run() {
         while (true) {
             try {
-                barrierSim.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
+                barrierSim.hitAndWaitAll();
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
             for (Boid boid : boids) {
                 boid.updateVelocity(model);
             }
             try {
-                barrierVel.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
+                barrierVel.hitAndWaitAll();
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
             for (Boid boid : boids) {
                 boid.updatePos(model);
             }
             try {
-                barrierPos.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
+                barrierPos.hitAndWaitAll();
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }

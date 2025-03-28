@@ -1,10 +1,11 @@
 package pcd.ass01;
 
+import pcd.ass01.barrier.Barrier;
+import pcd.ass01.barrier.CyclicBarrierImpl;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -14,10 +15,8 @@ public class BoidsSimulator {
     private BoidsModel model;
     private Optional<BoidsView> view;
     private static final int FRAMERATE = 25;
-    private static final int DIV_FACTOR = 100;
-    private int nthread;
     private int framerate;
-    private CyclicBarrier barrierVel, barrierPos, barrierSim;
+    private Barrier barrierVel, barrierPos, barrierSim;
     private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
 
     private final Lock lock = new ReentrantLock();
@@ -58,15 +57,16 @@ public class BoidsSimulator {
     public void runSimulation() {
         var boids = model.getBoids();
         var nboids = boids.size();
-        nthread = nboids / DIV_FACTOR + (nboids % DIV_FACTOR == 0 ? 0 : 1);
+        int nthread = Runtime.getRuntime().availableProcessors() + 1;
+        int div_factor = nboids / nthread;
 
-        this.barrierVel = new CyclicBarrier(nthread);
-        this.barrierPos = new CyclicBarrier(nthread + 1);
-        this.barrierSim = new CyclicBarrier(nthread + 1);
+        this.barrierVel = new CyclicBarrierImpl(nthread);
+        this.barrierPos = new CyclicBarrierImpl(nthread + 1);
+        this.barrierSim = new CyclicBarrierImpl(nthread + 1);
 
         updateBoidsList.clear();
         for (int i = 0; i < nthread; i++) {
-            var subList = boids.subList(i * DIV_FACTOR, Math.min((i + 1) * DIV_FACTOR, boids.size()));
+            var subList = boids.subList(i * div_factor, Math.min((i + 1) * div_factor, boids.size()));
             var ub = new UpdateBoids(subList, model, barrierVel, barrierPos, barrierSim);
             updateBoidsList.add(ub);
         }
@@ -89,9 +89,9 @@ public class BoidsSimulator {
             var t0 = System.currentTimeMillis();
 
             try {
-                barrierSim.await();
-                barrierPos.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
+                barrierSim.hitAndWaitAll();
+                barrierPos.hitAndWaitAll();
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
 
