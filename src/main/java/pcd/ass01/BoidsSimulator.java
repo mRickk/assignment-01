@@ -1,5 +1,7 @@
 package pcd.ass01;
 
+import pcd.ass01.barrier.CyclicBarrierImpl;
+
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
@@ -54,16 +56,15 @@ public class BoidsSimulator {
         var boids = model.getBoids();
         exec = Executors.newVirtualThreadPerTaskExecutor();
         var taskSync = new TaskSync(boids.size());
+        var barrier = new CyclicBarrierImpl(boids.size());
 
-        var updateVelTasks = boids.stream().map(b -> (Runnable) () -> {
+        var updateTasks = boids.stream().map(b -> (Runnable) () -> {
             b.updateVelocity(model);
-            taskSync.complete();
-        }).toList();
-
-        var updatePosTasks = boids.stream().map(b -> (Runnable) () -> {
+            barrier.hitAndWaitAll();
             b.updatePos(model);
             taskSync.complete();
         }).toList();
+
 
         while (true) {
             try {
@@ -81,9 +82,7 @@ public class BoidsSimulator {
 
             var t0 = System.currentTimeMillis();
 
-            updateVelTasks.forEach(exec::execute);
-            taskSync.waitCompleted();
-            updatePosTasks.forEach(exec::execute);
+            updateTasks.forEach(exec::execute);
             taskSync.waitCompleted();
 
             if (view.isPresent()) {
