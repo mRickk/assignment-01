@@ -52,12 +52,14 @@ public class BoidsSimulator {
 
     public void runSimulation() {
         var boids = model.getBoids();
-        exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+        exec = Executors.newVirtualThreadPerTaskExecutor();
         var taskSync = new TaskSync(boids.size());
+
         var updateVelTasks = boids.stream().map(b -> (Runnable) () -> {
             b.updateVelocity(model);
             taskSync.complete();
         }).toList();
+
         var updatePosTasks = boids.stream().map(b -> (Runnable) () -> {
             b.updatePos(model);
             taskSync.complete();
@@ -79,15 +81,10 @@ public class BoidsSimulator {
 
             var t0 = System.currentTimeMillis();
 
-
-            try {
-                updateVelTasks.forEach(exec::execute);
-                taskSync.waitCompleted();
-                updatePosTasks.forEach(exec::execute);
-                taskSync.waitCompleted();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            updateVelTasks.forEach(exec::execute);
+            taskSync.waitCompleted();
+            updatePosTasks.forEach(exec::execute);
+            taskSync.waitCompleted();
 
             if (view.isPresent()) {
                 view.get().update(framerate);
