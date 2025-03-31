@@ -18,13 +18,17 @@ public class BoidsSimulator {
     private int framerate;
     private Barrier barrierVel, barrierSync;
     private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
+    private final int nThreads;
+    private final int nCycle;
 
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
-    private boolean isSimulationRunning = false;
+    private boolean isSimulationRunning = true;
     
-    public BoidsSimulator(BoidsModel model) {
+    public BoidsSimulator(BoidsModel model, Integer nThreads, Integer nCycle) {
         this.model = model;
+        this.nThreads = nThreads;
+        this.nCycle = nCycle;
         view = Optional.empty();
     }
 
@@ -54,24 +58,24 @@ public class BoidsSimulator {
         }
     }
 
-    public void runSimulation() {
+    public List<Integer> runSimulation() {
         var boids = model.getBoids();
         var nboids = boids.size();
-        int nthread = Runtime.getRuntime().availableProcessors() + 1;
-        int div_factor = nboids / nthread;
+        int div_factor = nboids / nThreads;
 
-        this.barrierVel = new CyclicBarrierImpl(nthread);
-        this.barrierSync = new CyclicBarrierImpl(nthread + 1);
+        this.barrierVel = new CyclicBarrierImpl(nThreads);
+        this.barrierSync = new CyclicBarrierImpl(nThreads + 1);
 
         updateBoidsList.clear();
-        for (int i = 0; i < nthread; i++) {
+        for (int i = 0; i < nThreads; i++) {
             var subList = boids.subList(i * div_factor, Math.min((i + 1) * div_factor, boids.size()));
             var ub = new UpdateBoids(subList, model, barrierVel, barrierSync);
             updateBoidsList.add(ub);
         }
         updateBoidsList.forEach(UpdateBoids::start);
 
-        while (true) {
+        List<Integer> output = new ArrayList<>();
+        for(int i = 0; i < nCycle; i++) {
             try {
                 lock.lock();
                 while(!isSimulationRunning) {
@@ -108,8 +112,10 @@ public class BoidsSimulator {
                 } else {
                     framerate = (int) (1000/dtElapsed);
                 }
+                output.add(framerate);
             }
-
         }
+        this.view.get().close();
+        return output;
     }
 }

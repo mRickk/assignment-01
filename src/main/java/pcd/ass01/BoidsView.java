@@ -123,4 +123,6 @@ public class BoidsView implements ChangeListener, ActionListener {
 	public int getHeight() {
 		return height;
 	}
+
+	public void close() { this.frame.dispose();}
 }
