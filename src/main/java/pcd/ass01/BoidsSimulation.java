@@ -28,7 +28,7 @@ public class BoidsSimulation {
 	public static void main(String[] args) {
 		int availableCore = Runtime.getRuntime().availableProcessors() + 1;
 
-		int range = availableCore / 3;
+		int range = availableCore / 2;
 		final List<Integer> nThreads = new ArrayList<>();
 		IntStream.range(availableCore-range, availableCore+range).forEach(nThreads::add);
 		final List<Integer> N_BOIDS = List.of(2500, 5000, 7500, 10000, 12500);
@@ -55,7 +55,7 @@ public class BoidsSimulation {
 			threadToBoidToFramerates.put(nThread, threadResults);
 		}
 
-		var filePath = "./output.json";
+		var filePath = "./multithread_performance.json";
 		try (FileWriter writer = new FileWriter(filePath)) {
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			gson.toJson(threadToBoidToFramerates, writer);
