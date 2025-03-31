@@ -32,7 +32,7 @@ public class BoidsSimulation {
 		final List<Integer> nThreads = new ArrayList<>();
 		IntStream.range(availableCore-range, availableCore+range).forEach(nThreads::add);
 		final List<Integer> N_BOIDS = List.of(2500, 5000, 7500, 10000, 12500);
-		final int N_CYCLE = 250;
+		final int N_CYCLE = 10;
 
 		Map<Integer, Map<Integer, List<Integer>>> threadToBoidToFramerates = new HashMap<>();
 		for (Integer nThread : nThreads) {
@@ -55,7 +55,7 @@ public class BoidsSimulation {
 			threadToBoidToFramerates.put(nThread, threadResults);
 		}
 
-		var filePath = "./task_performance.json";
+		var filePath = "./virtual_performance.json";
 		try (FileWriter writer = new FileWriter(filePath)) {
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			gson.toJson(threadToBoidToFramerates, writer);

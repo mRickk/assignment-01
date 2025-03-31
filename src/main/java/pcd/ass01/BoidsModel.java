@@ -88,15 +88,15 @@ public class BoidsModel {
     	this.cohesionWeight = value;
     }
 
-    public synchronized double getSeparationWeight() {
+    public double getSeparationWeight() {
     	return separationWeight;
     }
 
-    public synchronized double getCohesionWeight() {
+    public double getCohesionWeight() {
     	return cohesionWeight;
     }
 
-    public synchronized double getAlignmentWeight() {
+    public double getAlignmentWeight() {
     	return alignmentWeight;
     }
     

@@ -1,12 +1,11 @@
 package pcd.ass01;
 
+import pcd.ass01.barrier.CyclicBarrierImpl;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -61,13 +60,13 @@ public class BoidsSimulator {
 
     public List<Integer> runSimulation() {
         var boids = model.getBoids();
-        exec = Executors.newFixedThreadPool(nThreads);
+        exec = Executors.newVirtualThreadPerTaskExecutor();
         var taskSync = new TaskSync(boids.size());
-        var updateVelTasks = boids.stream().map(b -> (Runnable) () -> {
+        var barrier = new CyclicBarrierImpl(boids.size());
+
+        var updateTasks = boids.stream().map(b -> (Runnable) () -> {
             b.updateVelocity(model);
-            taskSync.complete();
-        }).toList();
-        var updatePosTasks = boids.stream().map(b -> (Runnable) () -> {
+            barrier.hitAndWaitAll();
             b.updatePos(model);
             taskSync.complete();
         }).toList();
@@ -89,14 +88,8 @@ public class BoidsSimulator {
 
             var t0 = System.currentTimeMillis();
 
-            try {
-                updateVelTasks.forEach(exec::execute);
-                taskSync.waitCompleted();
-                updatePosTasks.forEach(exec::execute);
-                taskSync.waitCompleted();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            updateTasks.forEach(exec::execute);
+            taskSync.waitCompleted();
 
             if (view.isPresent()) {
                 view.get().update(framerate);
