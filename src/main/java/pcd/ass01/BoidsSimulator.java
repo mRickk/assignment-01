@@ -14,9 +14,8 @@ public class BoidsSimulator {
 
     private BoidsModel model;
     private Optional<BoidsView> view;
-    private static final int FRAMERATE = 25;
+    private static final int FRAMERATE = Integer.MAX_VALUE;
     private int framerate;
-    private final int nThreads;
     private final int nCycle;
 
     private final Lock lock = new ReentrantLock();
@@ -25,9 +24,8 @@ public class BoidsSimulator {
 
     private ExecutorService exec;
 
-    public BoidsSimulator(BoidsModel model, Integer nThreads, Integer nCycle) {
+    public BoidsSimulator(BoidsModel model, Integer nCycle) {
         this.model = model;
-        this.nThreads = nThreads;
         this.nCycle = nCycle;
         view = Optional.empty();
     }

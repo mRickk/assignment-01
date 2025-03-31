@@ -28,11 +28,11 @@ public class BoidsSimulation {
 	public static void main(String[] args) {
 		int availableCore = Runtime.getRuntime().availableProcessors() + 1;
 
-		int range = availableCore / 2;
-		final List<Integer> nThreads = new ArrayList<>();
-		IntStream.range(availableCore-range, availableCore+range).forEach(nThreads::add);
+//		int range = availableCore / 2;
+		final List<Integer> nThreads = List.of(availableCore);
+//		IntStream.range(availableCore-range, availableCore+range).forEach(nThreads::add);
 		final List<Integer> N_BOIDS = List.of(2500, 5000, 7500, 10000, 12500);
-		final int N_CYCLE = 10;
+		final int N_CYCLE = 250;
 
 		Map<Integer, Map<Integer, List<Integer>>> threadToBoidToFramerates = new HashMap<>();
 		for (Integer nThread : nThreads) {
@@ -46,7 +46,7 @@ public class BoidsSimulation {
                         MAX_SPEED,
                         PERCEPTION_RADIUS,
                         AVOID_RADIUS);
-                var sim = new BoidsSimulator(model, nThread, N_CYCLE);
+                var sim = new BoidsSimulator(model, N_CYCLE);
 
                 var view = new BoidsView(model, sim, SCREEN_WIDTH, SCREEN_HEIGHT);
                 sim.attachView(view);
