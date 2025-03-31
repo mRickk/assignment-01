@@ -1,11 +1,12 @@
 package pcd.ass01;
 
-import pcd.ass01.barrier.Barrier;
-import pcd.ass01.barrier.CyclicBarrierImpl;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -16,15 +17,15 @@ public class BoidsSimulator {
     private Optional<BoidsView> view;
     private static final int FRAMERATE = 25;
     private int framerate;
-    private Barrier barrierVel, barrierSync;
-    private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
     private final int nThreads;
     private final int nCycle;
 
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
     private boolean isSimulationRunning = true;
-    
+
+    private ExecutorService exec;
+
     public BoidsSimulator(BoidsModel model, Integer nThreads, Integer nCycle) {
         this.model = model;
         this.nThreads = nThreads;
@@ -60,19 +61,16 @@ public class BoidsSimulator {
 
     public List<Integer> runSimulation() {
         var boids = model.getBoids();
-        var nboids = boids.size();
-        int div_factor = nboids / nThreads;
-
-        this.barrierVel = new CyclicBarrierImpl(nThreads);
-        this.barrierSync = new CyclicBarrierImpl(nThreads + 1);
-
-        updateBoidsList.clear();
-        for (int i = 0; i < nThreads; i++) {
-            var subList = boids.subList(i * div_factor, Math.min((i + 1) * div_factor, boids.size()));
-            var ub = new UpdateBoids(subList, model, barrierVel, barrierSync);
-            updateBoidsList.add(ub);
-        }
-        updateBoidsList.forEach(UpdateBoids::start);
+        exec = Executors.newFixedThreadPool(nThreads);
+        var taskSync = new TaskSync(boids.size());
+        var updateVelTasks = boids.stream().map(b -> (Runnable) () -> {
+            b.updateVelocity(model);
+            taskSync.complete();
+        }).toList();
+        var updatePosTasks = boids.stream().map(b -> (Runnable) () -> {
+            b.updatePos(model);
+            taskSync.complete();
+        }).toList();
 
         List<Integer> output = new ArrayList<>();
         for(int i = 0; i < nCycle; i++) {
@@ -92,8 +90,10 @@ public class BoidsSimulator {
             var t0 = System.currentTimeMillis();
 
             try {
-                barrierSync.hitAndWaitAll();//Last, breaking barrier
-                barrierSync.hitAndWaitAll();//First, wait
+                updateVelTasks.forEach(exec::execute);
+                taskSync.waitCompleted();
+                updatePosTasks.forEach(exec::execute);
+                taskSync.waitCompleted();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -114,6 +114,7 @@ public class BoidsSimulator {
                 }
                 output.add(framerate);
             }
+
         }
         this.view.get().close();
         return output;

@@ -55,7 +55,7 @@ public class BoidsSimulation {
 			threadToBoidToFramerates.put(nThread, threadResults);
 		}
 
-		var filePath = "./multithread_performance.json";
+		var filePath = "./task_performance.json";
 		try (FileWriter writer = new FileWriter(filePath)) {
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			gson.toJson(threadToBoidToFramerates, writer);
