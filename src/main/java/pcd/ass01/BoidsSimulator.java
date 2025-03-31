@@ -15,7 +15,7 @@ public class BoidsSimulator {
 
     private BoidsModel model;
     private Optional<BoidsView> view;
-    private static final int FRAMERATE = 25;
+    private static final int FRAMERATE = Integer.MAX_VALUE;
     private int framerate;
     private final int nThreads;
     private final int nCycle;
