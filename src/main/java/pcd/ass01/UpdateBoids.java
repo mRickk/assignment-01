@@ -7,20 +7,19 @@ public class UpdateBoids extends Thread {
     private List<Boid> boids;
     private BoidsModel model;
     private Barrier barrierVel;
-    private Barrier barrierPos;
-    private Barrier barrierSim;
-    public UpdateBoids(List<Boid> boids, BoidsModel model, Barrier barrierVel, Barrier barrierPos, Barrier barrierSim) {
+    private Barrier barrierSync;
+
+    public UpdateBoids(List<Boid> boids, BoidsModel model, Barrier barrierVel, Barrier barrierSync) {
         this.boids = boids;
         this.model = model;
         this.barrierVel = barrierVel;
-        this.barrierPos = barrierPos;
-        this.barrierSim = barrierSim;
+        this.barrierSync = barrierSync;
     }
     @Override
     public void run() {
         while (true) {
             try {
-                barrierSim.hitAndWaitAll();
+                barrierSync.hitAndWaitAll();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -36,7 +35,7 @@ public class UpdateBoids extends Thread {
                 boid.updatePos(model);
             }
             try {
-                barrierPos.hitAndWaitAll();
+                barrierSync.hitAndWaitAll();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

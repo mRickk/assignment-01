@@ -16,7 +16,7 @@ public class BoidsSimulator {
     private Optional<BoidsView> view;
     private static final int FRAMERATE = 25;
     private int framerate;
-    private Barrier barrierVel, barrierPos, barrierSim;
+    private Barrier barrierVel, barrierSync;
     private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
 
     private final Lock lock = new ReentrantLock();
@@ -61,13 +61,12 @@ public class BoidsSimulator {
         int div_factor = nboids / nthread;
 
         this.barrierVel = new CyclicBarrierImpl(nthread);
-        this.barrierPos = new CyclicBarrierImpl(nthread + 1);
-        this.barrierSim = new CyclicBarrierImpl(nthread + 1);
+        this.barrierSync = new CyclicBarrierImpl(nthread + 1);
 
         updateBoidsList.clear();
         for (int i = 0; i < nthread; i++) {
             var subList = boids.subList(i * div_factor, Math.min((i + 1) * div_factor, boids.size()));
-            var ub = new UpdateBoids(subList, model, barrierVel, barrierPos, barrierSim);
+            var ub = new UpdateBoids(subList, model, barrierVel, barrierSync);
             updateBoidsList.add(ub);
         }
         updateBoidsList.forEach(UpdateBoids::start);
@@ -89,8 +88,8 @@ public class BoidsSimulator {
             var t0 = System.currentTimeMillis();
 
             try {
-                barrierSim.hitAndWaitAll();
-                barrierPos.hitAndWaitAll();
+                barrierSync.hitAndWaitAll();//Last, breaking barrier
+                barrierSync.hitAndWaitAll();//First, wait
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
