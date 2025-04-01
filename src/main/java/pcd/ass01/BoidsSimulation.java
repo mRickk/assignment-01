@@ -29,9 +29,13 @@ public class BoidsSimulation {
 		int availableCore = Runtime.getRuntime().availableProcessors() + 1;
 
 //		int range = availableCore / 2;
-		final List<Integer> nThreads = List.of(availableCore);
+//		final List<Integer> nThreads = List.of(availableCore);
 //		IntStream.range(availableCore-range, availableCore+range).forEach(nThreads::add);
-		final List<Integer> N_BOIDS = List.of(2500, 5000, 7500, 10000, 12500);
+//		final List<Integer> N_BOIDS = List.of(2500, 5000, 7500, 10000, 12500);
+//		final int N_CYCLE = 250;
+
+		final List<Integer> nThreads = List.of(availableCore);
+		final List<Integer> N_BOIDS = List.of(2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000);
 		final int N_CYCLE = 250;
 
 		Map<Integer, Map<Integer, List<Integer>>> threadToBoidToFramerates = new HashMap<>();
@@ -55,7 +59,7 @@ public class BoidsSimulation {
 			threadToBoidToFramerates.put(nThread, threadResults);
 		}
 
-		var filePath = "./base_performance.json";
+		var filePath = "./base_performance_compare.json";
 		try (FileWriter writer = new FileWriter(filePath)) {
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			gson.toJson(threadToBoidToFramerates, writer);
