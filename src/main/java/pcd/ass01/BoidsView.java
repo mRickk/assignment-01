@@ -104,16 +104,16 @@ public class BoidsView implements ChangeListener, ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == startButton) {
-			simulator.startSimulator();
-			startButton.setEnabled(false);
-			stopButton.setEnabled(true);
-		}
-		if (e.getSource() == stopButton) {
-			simulator.stopSimulator();
-			startButton.setEnabled(true);
-			stopButton.setEnabled(false);
-		}
+//		if (e.getSource() == startButton) {
+//			simulator.startSimulator();
+//			startButton.setEnabled(false);
+//			stopButton.setEnabled(true);
+//		}
+//		if (e.getSource() == stopButton) {
+//			simulator.stopSimulator();
+//			startButton.setEnabled(true);
+//			stopButton.setEnabled(false);
+//		}
 	}
 
 	public int getWidth() {
@@ -123,4 +123,6 @@ public class BoidsView implements ChangeListener, ActionListener {
 	public int getHeight() {
 		return height;
 	}
+
+	public void close() { this.frame.dispose();}
 }
