@@ -18,27 +18,15 @@ public class UpdateBoids extends Thread {
     @Override
     public void run() {
         while (true) {
-            try {
-                barrierSync.hitAndWaitAll();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            barrierSync.hitAndWaitAll();
             for (Boid boid : boids) {
                 boid.updateVelocity(model);
             }
-            try {
-                barrierVel.hitAndWaitAll();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            barrierVel.hitAndWaitAll();
             for (Boid boid : boids) {
                 boid.updatePos(model);
             }
-            try {
-                barrierSync.hitAndWaitAll();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            barrierSync.hitAndWaitAll();
         }
     }
 

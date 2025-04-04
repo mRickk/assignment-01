@@ -79,12 +79,8 @@ public class BoidsSimulator {
             }
             var t0 = System.currentTimeMillis();
 
-            try {
-                barrierSync.hitAndWaitAll();//Last, breaking barrier
-                barrierSync.hitAndWaitAll();//First, wait
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            barrierSync.hitAndWaitAll();//Last, breaking barrier
+            barrierSync.hitAndWaitAll();//First, wait
 
             if (view.isPresent()) {
                 view.get().update(framerate);

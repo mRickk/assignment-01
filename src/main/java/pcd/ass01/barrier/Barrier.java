@@ -9,6 +9,6 @@ package pcd.ass01.barrier;
  */
 public interface Barrier {
 
-	void hitAndWaitAll() throws InterruptedException;
+	void hitAndWaitAll();
 
 }
