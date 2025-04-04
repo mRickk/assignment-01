@@ -73,15 +73,10 @@ public class BoidsSimulator {
             }
             var t0 = System.currentTimeMillis();
 
-
-            try {
-                updateVelTasks.forEach(exec::execute);
-                taskSync.waitCompleted();
-                updatePosTasks.forEach(exec::execute);
-                taskSync.waitCompleted();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            updateVelTasks.forEach(exec::execute);
+            taskSync.waitCompleted();
+            updatePosTasks.forEach(exec::execute);
+            taskSync.waitCompleted();
 
             if (view.isPresent()) {
                 view.get().update(framerate);
@@ -100,5 +95,6 @@ public class BoidsSimulator {
             }
 
         }
+        exec.shutdown();
     }
 }
