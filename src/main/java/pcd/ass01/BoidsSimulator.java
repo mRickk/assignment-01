@@ -97,7 +97,7 @@ public class BoidsSimulator {
                     framerate = (int) (1000/dtElapsed);
                 }
             }
-
         }
+        updateBoidsList.forEach(Thread::interrupt);
     }
 }
