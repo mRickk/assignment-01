@@ -127,6 +127,7 @@ public class BoidsView implements ChangeListener, ActionListener {
 				boidsCountField.setEnabled(true);
 				simulator.stopSimulator();
 				startStopButton.setText(START);
+				pauseResumeButton.setText(PAUSE);
 				pauseResumeButton.setEnabled(false);
 			}
 		}

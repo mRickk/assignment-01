@@ -45,6 +45,7 @@ public class BoidsSimulator {
 
     public void stopSimulator() {
         startStopmonitor.set(false);
+        pauseResumeMonitor.set(true);
     }
 
     public void runSimulationLoop() {
@@ -73,7 +74,9 @@ public class BoidsSimulator {
 
         while (startStopmonitor.get()) {
             pauseResumeMonitor.waitForCondition(true);
-
+            if(!startStopmonitor.get()) {
+                break;
+            }
             var t0 = System.currentTimeMillis();
 
             try {
