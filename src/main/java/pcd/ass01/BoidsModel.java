@@ -2,6 +2,7 @@ package pcd.ass01;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BoidsModel {
     
@@ -14,6 +15,7 @@ public class BoidsModel {
     private final double maxSpeed;
     private final double perceptionRadius;
     private final double avoidRadius;
+    private final ReentrantLock separationLock, alignmentLock, cohesionLock;
 
     public BoidsModel(
                             double initialSeparationWeight,
@@ -32,6 +34,9 @@ public class BoidsModel {
         this.maxSpeed = maxSpeed;
         this.perceptionRadius = perceptionRadius;
         this.avoidRadius = avoidRadius;
+        this.separationLock = new ReentrantLock();
+        this.alignmentLock = new ReentrantLock();
+        this.cohesionLock = new ReentrantLock();
     }
 
     public void setBoids(int nBoids) {
@@ -71,28 +76,64 @@ public class BoidsModel {
     	return height;
     }
 
-    public synchronized void setSeparationWeight(double value) {
-    	this.separationWeight = value;
+    public void setSeparationWeight(double value) {
+        try {
+            separationLock.lock();
+            this.separationWeight = value;
+        }
+        finally {
+            separationLock.unlock();
+        }
     }
 
-    public synchronized void setAlignmentWeight(double value) {
-    	this.alignmentWeight = value;
+    public void setAlignmentWeight(double value) {
+        try {
+            alignmentLock.lock();
+            this.alignmentWeight = value;
+        }
+        finally {
+            alignmentLock.unlock();
+        }
     }
 
-    public synchronized void setCohesionWeight(double value) {
-    	this.cohesionWeight = value;
+    public void setCohesionWeight(double value) {
+        try {
+            cohesionLock.lock();
+            this.cohesionWeight = value;
+        }
+        finally {
+            cohesionLock.unlock();
+        }
     }
 
-    public synchronized double getSeparationWeight() {
-    	return separationWeight;
+    public double getSeparationWeight() {
+        try {
+            separationLock.lock();
+            return separationWeight;
+        }
+        finally {
+            separationLock.unlock();
+        }
     }
 
-    public synchronized double getCohesionWeight() {
-    	return cohesionWeight;
+    public double getCohesionWeight() {
+        try {
+            cohesionLock.lock();
+            return cohesionWeight;
+        }
+        finally {
+            cohesionLock.unlock();
+        }
     }
 
-    public synchronized double getAlignmentWeight() {
-    	return alignmentWeight;
+    public double getAlignmentWeight() {
+        try {
+            alignmentLock.lock();
+            return alignmentWeight;
+        }
+        finally {
+            alignmentLock.unlock();
+        }
     }
     
     public double getMaxSpeed() {
