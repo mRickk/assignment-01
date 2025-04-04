@@ -2,44 +2,44 @@ package pcd.ass01;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BoidsModel {
-    
+
     private final List<Boid> boids = new ArrayList<>();
-    private double separationWeight; 
-    private double alignmentWeight; 
-    private double cohesionWeight; 
+    private double separationWeight;
+    private double alignmentWeight;
+    private double cohesionWeight;
     private final double width;
     private final double height;
     private final double maxSpeed;
     private final double perceptionRadius;
     private final double avoidRadius;
-    private final int nBoids;
+    private final ReentrantLock separationLock, alignmentLock, cohesionLock;
 
     public BoidsModel(
-                            int nBoids,
-                            double initialSeparationWeight,
-    						double initialAlignmentWeight, 
-    						double initialCohesionWeight,
-    						double width, 
-    						double height,
-    						double maxSpeed,
-    						double perceptionRadius,
-    						double avoidRadius){
+            double initialSeparationWeight,
+            double initialAlignmentWeight,
+            double initialCohesionWeight,
+            double width,
+            double height,
+            double maxSpeed,
+            double perceptionRadius,
+            double avoidRadius){
         separationWeight = initialSeparationWeight;
         alignmentWeight = initialAlignmentWeight;
         cohesionWeight = initialCohesionWeight;
-        this.nBoids = nBoids;
         this.width = width;
         this.height = height;
         this.maxSpeed = maxSpeed;
         this.perceptionRadius = perceptionRadius;
         this.avoidRadius = avoidRadius;
-
-        setBoids();
+        this.separationLock = new ReentrantLock();
+        this.alignmentLock = new ReentrantLock();
+        this.cohesionLock = new ReentrantLock();
     }
 
-    private void setBoids() {
+    public void setBoids(int nBoids) {
         boids.clear();
         for (int i = 0; i < nBoids; i++) {
             P2d pos = new P2d(-width/2 + Math.random() * width, -height/2 + Math.random() * height);
@@ -49,66 +49,102 @@ public class BoidsModel {
     }
 
     public List<Boid> getBoids(){
-    	return boids;
+        return boids;
     }
 
     public double getMinX() {
-    	return -width/2;
+        return -width/2;
     }
 
     public double getMaxX() {
-    	return width/2;
+        return width/2;
     }
 
     public double getMinY() {
-    	return -height/2;
+        return -height/2;
     }
 
     public double getMaxY() {
-    	return height/2;
+        return height/2;
     }
-    
+
     public double getWidth() {
-    	return width;
+        return width;
     }
- 
+
     public double getHeight() {
-    	return height;
+        return height;
     }
 
-    public synchronized void setSeparationWeight(double value) {
-    	this.separationWeight = value;
+    public void setSeparationWeight(double value) {
+        try {
+            separationLock.lock();
+            this.separationWeight = value;
+        }
+        finally {
+            separationLock.unlock();
+        }
     }
 
-    public synchronized void setAlignmentWeight(double value) {
-    	this.alignmentWeight = value;
+    public void setAlignmentWeight(double value) {
+        try {
+            alignmentLock.lock();
+            this.alignmentWeight = value;
+        }
+        finally {
+            alignmentLock.unlock();
+        }
     }
 
-    public synchronized void setCohesionWeight(double value) {
-    	this.cohesionWeight = value;
+    public void setCohesionWeight(double value) {
+        try {
+            cohesionLock.lock();
+            this.cohesionWeight = value;
+        }
+        finally {
+            cohesionLock.unlock();
+        }
     }
 
-    public synchronized double getSeparationWeight() {
-    	return separationWeight;
+    public double getSeparationWeight() {
+        try {
+            separationLock.lock();
+            return separationWeight;
+        }
+        finally {
+            separationLock.unlock();
+        }
     }
 
-    public synchronized double getCohesionWeight() {
-    	return cohesionWeight;
+    public double getCohesionWeight() {
+        try {
+            cohesionLock.lock();
+            return cohesionWeight;
+        }
+        finally {
+            cohesionLock.unlock();
+        }
     }
 
-    public synchronized double getAlignmentWeight() {
-    	return alignmentWeight;
+    public double getAlignmentWeight() {
+        try {
+            alignmentLock.lock();
+            return alignmentWeight;
+        }
+        finally {
+            alignmentLock.unlock();
+        }
     }
-    
+
     public double getMaxSpeed() {
-    	return maxSpeed;
+        return maxSpeed;
     }
 
     public double getAvoidRadius() {
-    	return avoidRadius;
+        return avoidRadius;
     }
 
     public double getPerceptionRadius() {
-    	return perceptionRadius;
+        return perceptionRadius;
     }
 }
