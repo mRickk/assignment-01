@@ -37,23 +37,7 @@ public class InputView implements ActionListener {
 
     @Override
     public synchronized void actionPerformed(ActionEvent e) {
-        try {
-            result = Integer.parseInt(boidsCountField.getText());
-            if (result > 0) {
-                startButton.setEnabled(false);
-                notifyAll();
-            } else {
-                JOptionPane.showMessageDialog(frame,
-                        "Please enter a positive number of boids.",
-                        "Invalid Input", JOptionPane.ERROR_MESSAGE);
-                result = null;
-            }
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(frame,
-                    "Please enter a valid number.",
-                    "Invalid Input", JOptionPane.ERROR_MESSAGE);
-            result = null;
-        }
+
     }
 
     public synchronized int getBoidCount() throws InterruptedException {

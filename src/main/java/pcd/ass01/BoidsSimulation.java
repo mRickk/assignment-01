@@ -15,29 +15,17 @@ public class BoidsSimulation {
 	final static int SCREEN_WIDTH = 800; 
 	final static int SCREEN_HEIGHT = 800;
 
-	final static int INPUT_SCREEN_WIDTH = 300;
-	final static int INPUT_SCREEN_HEIGHT = 80;
-
 	public static void main(String[] args) {
-		var inputView = new InputView(INPUT_SCREEN_WIDTH, INPUT_SCREEN_HEIGHT);
-        try {
-            var nBoids = inputView.getBoidCount();
+		var model = new BoidsModel(
+				SEPARATION_WEIGHT, ALIGNMENT_WEIGHT, COHESION_WEIGHT,
+				ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT,
+				MAX_SPEED,
+				PERCEPTION_RADIUS,
+				AVOID_RADIUS);
+		var sim = new BoidsSimulator(model);
 
-			var model = new BoidsModel(
-					nBoids,
-					SEPARATION_WEIGHT, ALIGNMENT_WEIGHT, COHESION_WEIGHT,
-					ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT,
-					MAX_SPEED,
-					PERCEPTION_RADIUS,
-					AVOID_RADIUS);
-			var sim = new BoidsSimulator(model);
-
-			var view = new BoidsView(model, sim, SCREEN_WIDTH, SCREEN_HEIGHT);
-			sim.attachView(view);
-			sim.runSimulation();
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+		var view = new BoidsView(model, sim, SCREEN_WIDTH, SCREEN_HEIGHT);
+		sim.attachView(view);
+		sim.runSimulationLoop();
     }
 }

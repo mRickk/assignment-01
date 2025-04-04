@@ -2,13 +2,10 @@ package pcd.ass01;
 
 import pcd.ass01.barrier.Barrier;
 import pcd.ass01.barrier.CyclicBarrierImpl;
-
+import pcd.ass01.monitor.BooleanMonitor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class BoidsSimulator {
 
@@ -19,42 +16,45 @@ public class BoidsSimulator {
     private Barrier barrierVel, barrierSync;
     private final List<UpdateBoids> updateBoidsList = new ArrayList<>();
 
-    private final Lock lock = new ReentrantLock();
-    private final Condition cond = lock.newCondition();
-    private boolean isSimulationRunning = false;
-    
+    private final BooleanMonitor startStopmonitor;
+    private final BooleanMonitor pauseResumeMonitor;
+
     public BoidsSimulator(BoidsModel model) {
         this.model = model;
         view = Optional.empty();
+        this.startStopmonitor = new BooleanMonitor(false);
+        this.pauseResumeMonitor = new BooleanMonitor(true);
     }
 
     public void attachView(BoidsView view) {
         this.view = Optional.of(view);
     }
 
-    public void startSimulator() {
-        try {
-            lock.lock();
-            isSimulationRunning = true;
-            cond.signalAll();
-        }
-        finally {
-            lock.unlock();
-        }
+    public void resumeSimulator() {
+        pauseResumeMonitor.set(true);
+    }
+
+    public void pauseSimulator() {
+        pauseResumeMonitor.set(false);
+    }
+
+    public void startSimulator(int nBoids) {
+        model.setBoids(nBoids);
+        startStopmonitor.set(true);
     }
 
     public void stopSimulator() {
-        try {
-            lock.lock();
-            isSimulationRunning = false;
-            cond.signalAll();
-        }
-        finally {
-            lock.unlock();
+        startStopmonitor.set(false);
+    }
+
+    public void runSimulationLoop() {
+        while (true) {
+            startStopmonitor.waitForCondition(true);
+            runSimulation();
         }
     }
 
-    public void runSimulation() {
+    private void runSimulation() {
         var boids = model.getBoids();
         var nboids = boids.size();
         int nthread = Runtime.getRuntime().availableProcessors() + 1;
@@ -71,19 +71,8 @@ public class BoidsSimulator {
         }
         updateBoidsList.forEach(UpdateBoids::start);
 
-        while (true) {
-            try {
-                lock.lock();
-                while(!isSimulationRunning) {
-                    try {
-                        cond.await();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            } finally {
-                lock.unlock();
-            }
+        while (startStopmonitor.get()) {
+            pauseResumeMonitor.waitForCondition(true);
 
             var t0 = System.currentTimeMillis();
 
