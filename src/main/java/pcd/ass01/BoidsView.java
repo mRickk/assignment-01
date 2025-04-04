@@ -6,12 +6,19 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Hashtable;
+import java.util.Optional;
 
 public class BoidsView implements ChangeListener, ActionListener {
+	private final String START = "Start";
+	private final String STOP = "Stop";
+	private final String PAUSE = "Pause";
+	private final String RESUME = "Resume";
+
 	private final JFrame frame;
 	private final BoidsPanel boidsPanel;
 	private final JSlider cohesionSlider, separationSlider, alignmentSlider;
-	private final JButton startButton, stopButton;
+	private final JButton startStopButton, pauseResumeButton;
+	private final JTextField boidsCountField;
 	private final BoidsModel model;
 	private final int width, height;
 	private final BoidsSimulator simulator;
@@ -35,14 +42,18 @@ public class BoidsView implements ChangeListener, ActionListener {
 		controlPanel.setLayout(new BorderLayout());
 
 		JPanel buttonsPanel = new JPanel();
-		startButton = new JButton("Start");
-		stopButton = new JButton("Stop");
-		startButton.setEnabled(true);
-		stopButton.setEnabled(false);
-		startButton.addActionListener(this);
-		stopButton.addActionListener(this);
-		buttonsPanel.add(startButton);
-		buttonsPanel.add(stopButton);
+		buttonsPanel.add(new JLabel("Number of Boids:"));
+		boidsCountField = new JTextField(5);
+		boidsCountField.setText("2500");
+		buttonsPanel.add(boidsCountField);
+		startStopButton = new JButton(START);
+		pauseResumeButton = new JButton(PAUSE);
+		startStopButton.setEnabled(true);
+		pauseResumeButton.setEnabled(false);
+		startStopButton.addActionListener(this);
+		pauseResumeButton.addActionListener(this);
+		buttonsPanel.add(startStopButton);
+		buttonsPanel.add(pauseResumeButton);
 
 		JPanel slidersPanel = new JPanel();
 		slidersPanel.setLayout(new GridLayout(3, 2));
@@ -104,16 +115,49 @@ public class BoidsView implements ChangeListener, ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == startButton) {
-			simulator.startSimulator();
-			startButton.setEnabled(false);
-			stopButton.setEnabled(true);
+		if (e.getSource() == startStopButton) {
+			if (startStopButton.getText() == START) {
+				boidsCountField.setEnabled(false);
+				getNumBoids().ifPresent(val -> {
+					simulator.startSimulator(val);
+					startStopButton.setText(STOP);
+					pauseResumeButton.setEnabled(true);
+				});
+			} else {
+				boidsCountField.setEnabled(true);
+				simulator.stopSimulator();
+				startStopButton.setText(START);
+				pauseResumeButton.setText(PAUSE);
+				pauseResumeButton.setEnabled(false);
+			}
 		}
-		if (e.getSource() == stopButton) {
-			simulator.stopSimulator();
-			startButton.setEnabled(true);
-			stopButton.setEnabled(false);
+		if (e.getSource() == pauseResumeButton) {
+			if (pauseResumeButton.getText() == PAUSE) {
+				simulator.pauseSimulator();
+				pauseResumeButton.setText(RESUME);
+			} else {
+				simulator.resumeSimulator();
+				pauseResumeButton.setText(PAUSE);
+			}
 		}
+	}
+
+	private Optional<Integer> getNumBoids() {
+		Optional<Integer> result = Optional.empty();
+		try {
+			result = Optional.of(Integer.parseInt(boidsCountField.getText()));
+			if (result.get() < 0) {
+				JOptionPane.showMessageDialog(frame,
+						"Please enter a positive number of boids.",
+						"Invalid Input", JOptionPane.ERROR_MESSAGE);
+				result = Optional.empty();
+			}
+		} catch (NumberFormatException ex) {
+			JOptionPane.showMessageDialog(frame,
+					"Please enter a valid number.",
+					"Invalid Input", JOptionPane.ERROR_MESSAGE);
+		}
+		return result;
 	}
 
 	public int getWidth() {

@@ -1,6 +1,7 @@
 package pcd.ass01;
 
 import pcd.ass01.barrier.CyclicBarrierImpl;
+import pcd.ass01.monitor.BooleanMonitor;
 
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -15,44 +16,47 @@ public class BoidsSimulator {
     private static final int FRAMERATE = 25;
     private int framerate;
 
-    private final Lock lock = new ReentrantLock();
-    private final Condition cond = lock.newCondition();
-    private boolean isSimulationRunning = false;
-
+    private final BooleanMonitor startStopmonitor;
+    private final BooleanMonitor pauseResumeMonitor;
     private ExecutorService exec;
-    
+
     public BoidsSimulator(BoidsModel model) {
         this.model = model;
         view = Optional.empty();
+        this.startStopmonitor = new BooleanMonitor(false);
+        this.pauseResumeMonitor = new BooleanMonitor(true);
     }
 
     public void attachView(BoidsView view) {
         this.view = Optional.of(view);
     }
 
-    public void startSimulator() {
-        try {
-            lock.lock();
-            isSimulationRunning = true;
-            cond.signalAll();
-        }
-        finally {
-            lock.unlock();
-        }
+    public void resumeSimulator() {
+        pauseResumeMonitor.set(true);
+    }
+
+    public void pauseSimulator() {
+        pauseResumeMonitor.set(false);
+    }
+
+    public void startSimulator(int nBoids) {
+        model.setBoids(nBoids);
+        startStopmonitor.set(true);
     }
 
     public void stopSimulator() {
-        try {
-            lock.lock();
-            isSimulationRunning = false;
-            cond.signalAll();
-        }
-        finally {
-            lock.unlock();
+        startStopmonitor.set(false);
+        pauseResumeMonitor.set(true);
+    }
+
+    public void runSimulationLoop() {
+        while (true) {
+            startStopmonitor.waitForCondition(true);
+            runSimulation();
         }
     }
 
-    public void runSimulation() {
+    private void runSimulation() {
         var boids = model.getBoids();
         exec = Executors.newVirtualThreadPerTaskExecutor();
         var taskSync = new TaskSync(boids.size());
@@ -66,18 +70,10 @@ public class BoidsSimulator {
         }).toList();
 
 
-        while (true) {
-            try {
-                lock.lock();
-                while(!isSimulationRunning) {
-                    try {
-                        cond.await();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            } finally {
-                lock.unlock();
+        while (startStopmonitor.get()) {
+            pauseResumeMonitor.waitForCondition(true);
+            if(!startStopmonitor.get()) {
+                break;
             }
 
             var t0 = System.currentTimeMillis();
