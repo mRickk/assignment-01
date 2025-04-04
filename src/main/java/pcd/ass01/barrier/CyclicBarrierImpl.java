@@ -34,7 +34,7 @@ public class CyclicBarrierImpl implements Barrier {
                 }
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            //throw new RuntimeException(e);
         } finally {
             lock.unlock();
         }

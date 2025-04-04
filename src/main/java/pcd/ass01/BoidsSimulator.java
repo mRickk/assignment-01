@@ -98,6 +98,6 @@ public class BoidsSimulator {
             }
 
         }
-        //TODO: killare i thread
+        threads.forEach(Thread::interrupt);
     }
 }
