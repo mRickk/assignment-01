@@ -3,6 +3,7 @@ package pcd.ass01;
 import pcd.ass01.barrier.CyclicBarrierImpl;
 import pcd.ass01.monitor.BooleanMonitor;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
@@ -18,7 +19,6 @@ public class BoidsSimulator {
 
     private final BooleanMonitor startStopmonitor;
     private final BooleanMonitor pauseResumeMonitor;
-    private ExecutorService exec;
 
     public BoidsSimulator(BoidsModel model) {
         this.model = model;
@@ -58,17 +58,18 @@ public class BoidsSimulator {
 
     private void runSimulation() {
         var boids = model.getBoids();
-        exec = Executors.newVirtualThreadPerTaskExecutor();
-        var taskSync = new TaskSync(boids.size());
-        var barrier = new CyclicBarrierImpl(boids.size());
+        var barrierVel = new CyclicBarrierImpl(boids.size());
+        var barrierSync = new CyclicBarrierImpl(boids.size() + 1);
 
-        var updateTasks = boids.stream().map(b -> (Runnable) () -> {
-            b.updateVelocity(model);
-            barrier.hitAndWaitAll();
-            b.updatePos(model);
-            taskSync.complete();
-        }).toList();
-
+        var threads = boids.stream().map(b -> Thread.ofVirtual().start(() -> {
+            while(true) {
+                barrierSync.hitAndWaitAll();
+                b.updateVelocity(model);
+                barrierVel.hitAndWaitAll();
+                b.updatePos(model);
+                barrierSync.hitAndWaitAll();
+            }
+        })).toList();
 
         while (startStopmonitor.get()) {
             pauseResumeMonitor.waitForCondition(true);
@@ -77,9 +78,8 @@ public class BoidsSimulator {
             }
 
             var t0 = System.currentTimeMillis();
-
-            updateTasks.forEach(exec::execute);
-            taskSync.waitCompleted();
+            barrierSync.hitAndWaitAll();//Last, breaking barrier
+            barrierSync.hitAndWaitAll();//First, wait
 
             if (view.isPresent()) {
                 view.get().update(framerate);
@@ -98,5 +98,6 @@ public class BoidsSimulator {
             }
 
         }
+        //TODO: killare i thread
     }
 }
