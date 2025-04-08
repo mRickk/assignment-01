@@ -59,16 +59,21 @@ public class BoidsSimulator {
         var boids = model.getBoids();
         var nboids = boids.size();
         int nthread = Runtime.getRuntime().availableProcessors() + 1;
-        int div_factor = nboids / nthread;
+        double div_factor = (double) nboids / nthread;
 
         this.barrierVel = new CyclicBarrierImpl(nthread);
         this.barrierSync = new CyclicBarrierImpl(nthread + 1);
 
         updateBoidsList.clear();
         for (int i = 0; i < nthread; i++) {
-            var subList = boids.subList(i * div_factor, Math.min((i + 1) * div_factor, boids.size()));
+            var subList = boids.subList((int) (i * div_factor), (int) ((i + 1) * div_factor));
+            if (i == nthread - 1) {
+                subList = boids.subList((int) (i * div_factor), boids.size());
+            }
+
             var ub = new UpdateBoids(subList, model, barrierVel, barrierSync);
             updateBoidsList.add(ub);
+            System.out.println((int) (i * div_factor) + " -> " + (int) Math.min((i + 1) * div_factor, boids.size()));
         }
         updateBoidsList.forEach(UpdateBoids::start);
 
